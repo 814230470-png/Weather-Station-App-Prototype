@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VEVOR Weather Station · App Prototype</title>
+<style>
+:root{
+  --text:#0f1b2d; --text2:#46536a; --card:rgba(255,255,255,.92); --line:#dde3ec;
+  --hero:#fff; --hero2:rgba(255,255,255,.92);
+  --bar:rgba(255,255,255,.96); --barText:#3a4658; --barOn:#1d5fc4; --barOnBg:#e3edfb;
+  --accent:#1d5fc4; --cta:#c74f00; --brand:#ff6a13;
+  --sky:linear-gradient(180deg,#163f78 0%,#2a5c9f 45%,#3a6fb0 100%);
+  --field:#f3f6fa; --top:#163f78;
+}
+.dark{
+  --text:#eef3fb; --text2:#aab7cc; --card:rgba(17,29,52,.9); --line:#2b3b58;
+  --bar:rgba(14,24,44,.96); --barText:#b6c2d6; --barOn:#9cc1ff; --barOnBg:rgba(156,193,255,.16);
+  --accent:#9cc1ff; --field:#1b2a47;
+  --sky:linear-gradient(180deg,#06112a 0%,#0e2146 55%,#172f5c 100%); --top:#06112a;
+}
+.offline-sky{--sky:linear-gradient(180deg,#323d4d 0%,#46536a 55%,#56637a 100%);--top:#323d4d}
+.dark.offline-sky{--sky:linear-gradient(180deg,#14181f 0%,#232a36 55%,#2c3442 100%);--top:#14181f}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;background:#e9edf3;color:var(--text);
+  font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;display:flex;align-items:center;justify-content:center}
+button,select,input{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer;text-align:left}
+#phone{position:relative;width:390px;height:844px;border-radius:54px;border:12px solid #111;box-shadow:0 30px 80px rgba(0,0,0,.25);overflow:hidden}
+@media (max-width:500px),(max-height:700px){body{display:block}#phone{width:100vw;height:100dvh;border:0;border-radius:0;box-shadow:none}}
+.app{position:absolute;inset:0;background:var(--sky);color:var(--text);overflow:hidden;transition:background .4s}
+.status{position:absolute;top:0;left:0;right:0;height:46px;display:flex;align-items:center;justify-content:space-between;padding:6px 28px 0 34px;color:#fff;font-weight:600;font-size:15px;z-index:5;pointer-events:none;background:linear-gradient(180deg,var(--top) 70%,transparent)}
+.status .island{position:absolute;left:50%;top:10px;width:110px;height:30px;margin-left:-55px;background:#000;border-radius:20px}
+@media (max-width:500px){.status{display:none}}
+#content{position:absolute;inset:0;overflow-y:auto;padding:50px 16px 110px;-webkit-overflow-scrolling:touch}
+@media (max-width:500px){#content{padding-top:max(12px,env(safe-area-inset-top))}}
+#content::-webkit-scrollbar{display:none}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+/* header */
+.demo{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.32);padding:4px 10px;border-radius:20px;margin:0 0 10px}
+.hdr{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.logo{background:#fff;color:var(--brand);font-weight:900;font-style:italic;letter-spacing:-.02em;font-size:15px;padding:3px 8px;border-radius:7px}
+.stn{display:flex;align-items:center;gap:4px;color:#fff;font-weight:700;font-size:17px;padding:6px 4px;flex:1;min-width:0}
+.stn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spacer{flex:1}
+.icon-btn{width:38px;height:38px;border-radius:19px;display:grid;place-items:center;color:#fff;background:rgba(255,255,255,.16)}
+h1{color:#fff;font-size:30px;font-weight:800;letter-spacing:-.02em;margin:4px 0 2px}
+.sub{color:var(--hero2);font-size:15px;margin-bottom:14px}
+.nav{display:flex;align-items:center;margin:-2px 0 2px -8px}
+.back{display:flex;align-items:center;gap:0;color:#fff;font-size:17px;padding:8px 8px 8px 2px}
+.back .ic{width:26px;height:26px;stroke-width:2.4}
+/* banner */
+.banner{display:flex;align-items:center;gap:12px;width:100%;background:#fff3dc;color:#5a3300;border-radius:16px;padding:12px 14px;margin:6px 0 4px;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.banner.bad{background:#fde4e1;color:#7a1d14}
+.banner div{flex:1;display:flex;flex-direction:column;gap:2px;font-size:13px}
+.banner b{font-size:15px}
+.banner .ic{width:22px;height:22px}
+/* hero */
+.hero{text-align:center;color:var(--hero);padding:14px 0 18px}
+.cond{display:inline-flex;align-items:center;gap:8px;font-size:17px;font-weight:600}
+.cond svg{width:34px;height:34px}
+.big{font-size:84px;font-weight:200;letter-spacing:-.04em;line-height:1;margin:4px 0 4px}
+.big .deg{font-size:30px;font-weight:400;vertical-align:top;margin-left:2px;position:relative;top:10px;letter-spacing:0}
+.hl{font-size:16px;color:var(--hero2)}
+.upd{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:13px;font-weight:600;background:rgba(0,0,0,.28);padding:5px 12px;border-radius:20px}
+.upd .live{width:8px;height:8px;border-radius:4px;background:#5ee08f;box-shadow:0 0 0 3px rgba(94,224,143,.25)}
+.upd.warn{background:#fff3dc;color:#5a3300}
+.upd .ic{width:16px;height:16px}
+.stale .big,.stale .tv,.stale .wv{opacity:.55}
+/* tiles */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--card);border-radius:18px;padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px;min-height:104px;box-shadow:0 1px 3px rgba(0,0,0,.08);position:relative}
+.tile.wide{grid-column:span 2}
+.tl{display:flex;align-items:center;gap:6px;white-space:nowrap;font-size:13px;font-weight:600;color:var(--text2)}
+.tl .ic{width:18px;height:18px}
+.tl .chev{margin-left:auto;display:flex;opacity:.6}
+.tl .chev .ic{width:16px;height:16px}
+.info{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:11px;color:var(--accent)}
+.info .ic{width:16px;height:16px}
+.tv{font-size:30px;font-weight:650;letter-spacing:-.02em;line-height:1.1;margin-top:2px}
+.tv small{font-size:15px;font-weight:600;margin-left:3px;color:var(--text2)}
+.ts{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:4px}
+.trend{font-weight:700;color:var(--text)}
+.spark{width:100%;height:46px;margin-top:4px}
+.spark path.l{stroke:var(--accent);stroke-width:2.2;fill:none}
+.spark path.a{fill:var(--accent);opacity:.12}
+.spark circle{fill:var(--accent)}
+.windrow{display:flex;align-items:center;gap:16px;margin-top:4px}
+.compass{width:96px;height:96px;flex:none}
+.compass .ring{stroke:var(--line);fill:none;stroke-width:2}
+.compass .tk{stroke:var(--text2);stroke-width:1.2}
+.compass text{fill:var(--text2);font-size:11px;font-weight:700;text-anchor:middle}
+.compass .needle{fill:var(--cta)}
+.compass .hub{fill:var(--text)}
+.wv{display:grid;grid-template-columns:auto auto;gap:4px 14px;align-items:baseline}
+.wv span{font-size:13px;color:var(--text2)}
+.wv b{font-size:22px;font-weight:650}
+.wv b small{font-size:13px;color:var(--text2);margin-left:2px}
+/* groups / rows */
+.group{background:var(--card);border-radius:18px;margin-top:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.row{display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;min-height:52px}
+.row+.row{border-top:1px solid var(--line)}
+.rl{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.rl b{font-size:16px;font-weight:600}
+.rl small{font-size:13px;color:var(--text2)}
+.rv{font-size:15px;font-weight:600;text-align:right}
+.row>.ic:first-child,.row>.moon{color:var(--accent)}
+.row .chevr{opacity:.5;display:flex}
+.sec{color:#fff;font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin:22px 4px 0}
+.card{background:var(--card);border-radius:18px;padding:14px;margin-top:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text2)}
+.headline{font-size:22px;font-weight:750;margin:4px 0 6px;letter-spacing:-.01em}
+/* segmented + chips */
+.seg{display:flex;background:rgba(0,0,0,.25);border-radius:12px;padding:3px;margin-top:6px}
+.seg button{flex:1;text-align:center;color:#fff;font-size:14px;font-weight:600;padding:7px 0;border-radius:9px}
+.seg button.on{background:#fff;color:#0f1b2d}
+.card .seg,.form .seg{background:var(--field)}
+.card .seg button,.form .seg button{color:var(--text)}
+.card .seg button.on{background:var(--accent);color:#fff}
+.dark .card .seg button.on{color:#0b1830}
+.chips{display:flex;gap:8px;overflow-x:auto;margin-top:10px;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{display:flex;align-items:center;gap:6px;white-space:nowrap;padding:7px 12px;border-radius:18px;background:rgba(255,255,255,.18);color:#fff;font-size:14px;font-weight:600}
+.chip .ic{width:16px;height:16px}
+.chip.on{background:#fff;color:#0f1b2d}
+/* chart */
+.chart{margin-top:4px}
+.tip{font-size:13px;color:var(--text2);min-height:20px;font-weight:500}
+.tip b{color:var(--text)}
+.chart svg{width:100%;height:auto;display:block;touch-action:pan-y;cursor:crosshair}
+.chart .grid-l{stroke:var(--line);stroke-width:1}
+.chart text{fill:var(--text2);font-size:10px}
+.chart .l-main{stroke:var(--accent);stroke-width:2.4;fill:none}
+.chart .a-main{fill:var(--accent);opacity:.1}
+.chart .l-gust{stroke:#2a9d8f;stroke-width:2;fill:none;stroke-dasharray:2 3}
+.chart .l-prev{stroke:#d97706;stroke-width:2;fill:none;stroke-dasharray:6 4}
+.chart .bar{fill:var(--accent)}
+.chart .scrub{stroke:var(--text2);stroke-width:1;stroke-dasharray:3 3}
+.chart .dot{stroke:var(--card);stroke-width:2}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text2);margin-top:6px}
+.legend i{display:inline-block;width:18px;height:0;border-top:2.5px solid var(--accent);vertical-align:middle;margin-right:5px}
+.legend i.prev{border-top:2.5px dashed #d97706}
+.legend i.gust{border-top:2.5px dotted #2a9d8f}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.stat{background:var(--card);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.stat span{font-size:12px;color:var(--text2);font-weight:600}
+.stat b{font-size:18px;font-weight:700;white-space:nowrap}
+.stat b small{font-size:12px;font-weight:600;color:var(--text2);margin-left:2px}
+/* switch */
+.switch{width:51px;height:31px;border-radius:16px;background:#c5ccd6;position:relative;flex:none;transition:background .2s}
+.dark .switch{background:#3a4a66}
+.switch i{position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:14px;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);transition:transform .2s}
+.switch.on{background:#2fa24f}
+.switch.on i{transform:translateX(20px)}
+/* chips status */
+.st{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:700;padding:4px 9px;border-radius:12px;white-space:nowrap}
+.st .ic{width:14px;height:14px;stroke-width:2.4}
+.st.ok{background:#dcf3e4;color:#11602f}
+.st.warn{background:#fff0d4;color:#7a4100}
+.st.bad{background:#fde1dd;color:#9a2116}
+.st.na{background:#e6eaf0;color:#46536a}
+/* buttons */
+.cta{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:var(--cta);color:#fff;font-weight:700;font-size:17px;border-radius:14px;padding:15px;margin-top:14px}
+.cta:disabled{opacity:.45;cursor:not-allowed}
+.cta.ghost{background:var(--card);color:var(--accent)}
+.note{display:flex;gap:6px;color:var(--hero2);font-size:13px;margin-top:12px;line-height:1.4}
+.note .ic{width:16px;height:16px;margin-top:1px}
+/* alerts */
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:22px 14px}
+.empty .ic{width:32px;height:32px;color:var(--accent)}
+.empty b{font-size:17px}
+.empty span{font-size:14px;color:var(--text2)}
+.tpl{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.tplc{background:var(--card);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.tplc .ic{width:24px;height:24px;color:var(--accent);margin-bottom:2px}
+.tplc b{font-size:15px}
+.tplc span{font-size:13px;color:var(--text2)}
+.del{width:34px;height:34px;display:grid;place-items:center;color:var(--text2);border-radius:17px}
+/* form */
+.form{display:flex;flex-direction:column;gap:16px}
+.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:var(--text2)}
+.fl select,.inp{appearance:none;-webkit-appearance:none;background:var(--field);border:1.5px solid transparent;border-radius:12px;padding:12px 14px;font-size:16px;font-weight:500;color:var(--text)}
+.fl select{background-image:linear-gradient(45deg,transparent 50%,var(--text2) 50%),linear-gradient(135deg,var(--text2) 50%,transparent 50%);background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%;background-size:6px 6px;background-repeat:no-repeat}
+.inp{display:flex;align-items:center;gap:8px;padding:0 14px}
+.inp input{flex:1;border:0;background:none;padding:12px 0;font-size:16px;outline:none;min-width:0}
+.inp span{font-weight:600;color:var(--text2)}
+.inp.bad{border-color:#c0392b}
+.err{color:#b3261e;font-weight:600;font-size:13px}
+.dark .err{color:#ff9b91}
+.hint{font-weight:500}
+.preview p{font-size:16px;line-height:1.45;margin-top:4px;color:var(--text)}
+/* detail */
+.dval{display:flex;align-items:baseline;gap:6px;color:#fff;margin:6px 0 4px}
+.dval b{font-size:56px;font-weight:300;letter-spacing:-.03em}
+.dval span{font-size:20px;color:var(--hero2)}
+.dsub{color:var(--hero2);font-size:15px}
+.steps{counter-reset:s}
+.steps .row{align-items:flex-start}
+.num{width:24px;height:24px;border-radius:12px;background:var(--field);display:grid;place-items:center;font-size:13px;font-weight:700;flex:none}
+/* tabbar */
+#tabbar{position:absolute;left:12px;right:12px;bottom:14px;height:66px;background:var(--bar);border-radius:26px;display:flex;padding:6px;box-shadow:0 8px 30px rgba(0,0,0,.2);z-index:4}
+@media (max-width:500px){#tabbar{bottom:max(10px,env(safe-area-inset-bottom))}}
+#tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:20px;color:var(--barText);font-size:11px;font-weight:600}
+#tabbar button .ic{width:23px;height:23px}
+#tabbar button.on{color:var(--barOn);background:var(--barOnBg)}
+/* sheet + toast */
+#scrim{position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:8;display:none}
+#sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:24px 24px 0 0;padding:10px 16px 34px;z-index:9;transform:translateY(105%);transition:transform .25s,visibility .25s;visibility:hidden}
+#sheet{background:#fff}
+.dark #sheet{background:#13203a}
+#sheet.open{transform:none;visibility:visible}
+#sheet .grab{width:40px;height:5px;border-radius:3px;background:#c5ccd6;margin:0 auto 12px}
+#sheet h3{font-size:17px;margin:0 4px 6px}
+#toast{position:absolute;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:#1d2533;color:#fff;font-size:14px;padding:10px 16px;border-radius:14px;opacity:0;transition:.25s;z-index:10;width:max-content;max-width:86%;text-align:center;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%)}
+:focus-visible{outline:3px solid #ffbf47;outline-offset:2px}
+</style>
+</head>
+<body>
+<div id="phone">
+  <div class="app" id="app">
+    <div class="status"><span id="clock">9:41</span><span class="island"></span><span>
+      <svg width="64" height="12" viewBox="0 0 64 12" fill="#fff" aria-hidden="true"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/><path d="M29 3.5a9 9 0 0 1 12 0l-1.4 1.5a7 7 0 0 0-9.2 0zM31.6 6.3a5 5 0 0 1 6.8 0L35 10z"/><rect x="45" y="1" width="17" height="10" rx="3" fill="none" stroke="#fff"/><rect x="47" y="3" width="13" height="6" rx="1.5"/></svg></span></div>
+    <main id="content" aria-live="polite"></main>
+    <nav id="tabbar" aria-label="Main"></nav>
+    <div id="scrim" data-act="closeSheet"></div>
+    <div id="sheet" role="dialog" aria-label="Choose station"></div>
+    <div id="toast" role="status"></div>
+  </div>
+</div>
+<script>
+/* ---------- icons ---------- */
+const ic=(d,extra='')=>`<svg viewBox="0 0 24 24" class="ic" aria-hidden="true">${d?`<path d="${d}"/>`:''}${extra}</svg>`;
+const I={
+  home:ic('M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z'),
+  chart:ic('M4 20V11M9.5 20V5M15 20v-7M20.5 20V8'),
+  bell:ic('M6 16v-5a6 6 0 1 1 12 0v5l2 2H4zM10 21h4'),
+  station:ic('M12 10v11M8.5 21h7M8 4.5a5.5 5.5 0 0 0 0 7.5M16 4.5a5.5 5.5 0 0 1 0 7.5M5 2a9.5 9.5 0 0 0 0 12.5M19 2a9.5 9.5 0 0 1 0 12.5','<circle cx="12" cy="8.3" r="1.8"/>'),
+  gear:ic('M4 7h9M17 7h3M4 17h3M11 17h9','<circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/>'),
+  thermo:ic('M14 14.8V5a2 2 0 1 0-4 0v9.8a4 4 0 1 0 4 0zM12 9v8'),
+  drop:ic('M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z'),
+  dew:ic('M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11zM9 15.5h6'),
+  wind:ic('M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h7'),
+  gauge:ic('M6 4h12l-1.6 16H7.6zM6.7 10h10.6M9 14h2M9 17h3'),
+  baro:ic('M12 12l4-4','<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.3"/><path d="M5.5 12h1.5M12 5.5V7M17 12h1.5"/>'),
+  sun:ic('M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4','<circle cx="12" cy="12" r="4"/>'),
+  sunrise:ic('M3 18h18M7 18a5 5 0 0 1 10 0M12 4v4M9.5 6.5 12 4l2.5 2.5M4.6 11.6l1.4 1.4M19.4 11.6 18 13'),
+  warn:ic('M12 3.5 2.5 20h19zM12 10v4.5M12 17.2v.3'),
+  check:ic('M5 12.5l4.5 4.5L19 7.5'),
+  x:ic('M6 6l12 12M18 6 6 18'),
+  minus:ic('M6 12h12'),
+  chevR:ic('M9 6l6 6-6 6'),
+  chevL:ic('M15 5l-7 7 7 7'),
+  chevD:ic('M6 9l6 6 6-6'),
+  plus:ic('M12 5v14M5 12h14'),
+  info:ic('M12 11v5M12 7.8v.4','<circle cx="12" cy="12" r="9"/>'),
+  trash:ic('M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13'),
+  snow:ic('M12 2.5v19M4 7l16 10M20 7 4 17M9.5 4 12 6l2.5-2M9.5 20l2.5-2 2.5 2'),
+  rain:ic('M7 15a4 4 0 0 1-.6-8A6 6 0 0 1 18 8a3.5 3.5 0 0 1 0 7zM8 18l-1 2.5M12 18l-1 2.5M16 18l-1 2.5'),
+  heat:ic('M14 14.8V5a2 2 0 1 0-4 0v9.8a4 4 0 1 0 4 0zM18 4.5l2-1.5M18.5 9H21M18 13.5l2 1.5'),
+  book:ic('M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 5v16M8 7h7'),
+  wifi:ic('M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.6 15.8a5 5 0 0 1 6.8 0','<circle cx="12" cy="19" r="1"/>'),
+  battery:ic('M3 8h15v8H3zM21 11v2M5.5 10.5v3'),
+  ruler:ic('M4 16 16 4l4 4L8 20zM8 12l1.5 1.5M11 9l1.5 1.5M14 6l1.5 1.5'),
+};
+const pcloud=`<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="15" cy="15" r="7" fill="#ffd34d"/><g stroke="#ffd34d" stroke-width="2.4" stroke-linecap="round"><path d="M15 3v2.5M3 15h2.5M6.5 6.5l1.8 1.8M23.5 6.5l-1.8 1.8M6.5 23.5l1.8-1.8"/></g><path d="M14 33a6 6 0 0 1-.6-12 8.5 8.5 0 0 1 16.2 1.6A5.2 5.2 0 0 1 30 33z" fill="#fff"/></svg>`;
+const clearIcon=`<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="8" fill="#ffd34d"/><g stroke="#ffd34d" stroke-width="2.4" stroke-linecap="round"><path d="M20 4v4M20 32v4M4 20h4M32 20h4M8.7 8.7l2.8 2.8M28.5 28.5l2.8 2.8M8.7 31.3l2.8-2.8M28.5 11.5l2.8-2.8"/></g></svg>`;
+function moonIcon(frac){const rx=Math.abs(8*(1-2*frac)).toFixed(2);const sweep=frac<.5?0:1;
+  return `<svg viewBox="0 0 24 24" class="ic moon" aria-hidden="true" style="stroke:none"><circle cx="12" cy="12" r="8" fill="currentColor" opacity=".18"/><path d="M12 4A8 8 0 0 1 12 20A${rx} 8 0 0 ${sweep} 12 4z" fill="currentColor"/></svg>`}
+
+/* ---------- data ---------- */
+const STATIONS={
+  lakeside:{id:'lakeside',name:'Lakeside Station',online:true,updated:'1 min ago',cond:'Partly cloudy',temp:72.4,feels:73,hi:78,lo:64,hum:56,dew:56,wind:8.6,gust:12.3,dir:67,rainDay:.12,rainRate:0,press:29.92,pressTrend:-.04,indoor:73.8,indoorHum:44,uv:5,sunrise:'6:42 AM',sunset:'5:13 PM',moon:'Waxing crescent',moonFrac:.22,battery:18,issues:['rain','battery']},
+  backyard:{id:'backyard',name:'Backyard Station',online:false,updated:'3 h ago',cond:'Clear',temp:68.1,feels:68,hi:75,lo:61,hum:61,dew:54,wind:3.1,gust:5.2,dir:200,rainDay:0,rainRate:0,press:29.95,pressTrend:.02,indoor:71.2,indoorHum:47,uv:2,sunrise:'6:42 AM',sunset:'5:13 PM',moon:'Waxing crescent',moonFrac:.22,battery:76,issues:[]}
+};
+const MET={
+  temp:{name:'Outdoor temperature',short:'Temperature',type:'temp',icon:I.thermo},
+  humidity:{name:'Humidity',short:'Humidity',type:'pct',icon:I.drop},
+  wind:{name:'Wind',short:'Wind',type:'wind',icon:I.wind},
+  rain:{name:'Rainfall',short:'Rain',type:'rain',icon:I.gauge},
+  pressure:{name:'Pressure',short:'Pressure',type:'press',icon:I.baro},
+  dew:{name:'Dew point',short:'Dew point',type:'temp',icon:I.dew},
+  indoor:{name:'Indoor temperature',short:'Indoor',type:'temp',icon:I.home},
+  uv:{name:'UV index',short:'UV',type:'uv',icon:I.sun}
+};
+const AM={
+  temp:{name:'Outdoor temperature',type:'temp',min:-40,max:140},
+  humidity:{name:'Humidity',type:'pct',min:0,max:100},
+  gust:{name:'Wind gust',type:'wind',min:0,max:150},
+  rainRate:{name:'Rain rate',type:'rain',suffix:'/h',min:0,max:10},
+  rainDay:{name:'Daily rain',type:'rain',min:0,max:20},
+  pressure:{name:'Pressure',type:'press',min:27,max:32}
+};
+const METRIC_TO_ALERT={temp:'temp',humidity:'humidity',wind:'gust',rain:'rainDay',pressure:'pressure'};
+const TPL=[
+  {name:'Frost',icon:I.snow,m:'temp',cond:'below',v:32,dur:'10'},
+  {name:'High wind',icon:I.wind,m:'gust',cond:'above',v:30,dur:'0'},
+  {name:'Heavy rain',icon:I.rain,m:'rainRate',cond:'above',v:.5,dur:'5'},
+  {name:'Heat',icon:I.heat,m:'temp',cond:'above',v:95,dur:'30'}
+];
+const DUR={'0':'Immediately','5':'5 min','10':'10 min','30':'30 min','60':'1 hour'};
+const DIR16=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+const DIRFULL={N:'North',NNE:'North-northeast',NE:'Northeast',ENE:'East-northeast',E:'East',ESE:'East-southeast',SE:'Southeast',SSE:'South-southeast',S:'South',SSW:'South-southwest',SW:'Southwest',WSW:'West-southwest',W:'West',WNW:'West-northwest',NW:'Northwest',NNW:'North-northwest'};
+const dirName=d=>DIR16[Math.round(d/22.5)%16];
+
+/* ---------- state ---------- */
+const S={tab:'home',stacks:{home:[],history:[],alerts:[],devices:[]},scroll:{},station:'lakeside',
+  units:{temp:'F',wind:'mph',press:'inHg',rain:'in'},theme:'auto',
+  hPeriod:'week',hMetric:'temp',compare:false,dPeriod:'day',alerts:[],draft:null};
+const st=()=>STATIONS[S.station];
+
+/* ---------- units ---------- */
+function conv(t,v){switch(t){case'temp':return S.units.temp==='C'?(v-32)*5/9:v;case'wind':return S.units.wind==='kmh'?v*1.609344:v;case'rain':return S.units.rain==='mm'?v*25.4:v;case'press':return S.units.press==='hPa'?v*33.8639:v;default:return v}}
+function inv(t,v){switch(t){case'temp':return S.units.temp==='C'?v*9/5+32:v;case'wind':return S.units.wind==='kmh'?v/1.609344:v;case'rain':return S.units.rain==='mm'?v/25.4:v;case'press':return S.units.press==='hPa'?v/33.8639:v;default:return v}}
+function unit(t){return{temp:'°'+S.units.temp,wind:S.units.wind==='kmh'?'km/h':'mph',rain:S.units.rain,press:S.units.press,pct:'%',uv:''}[t]}
+function dec(t){return{temp:0,wind:1,rain:S.units.rain==='mm'?1:2,press:S.units.press==='hPa'?0:2,pct:0,uv:0}[t]}
+function f(t,v,d){return conv(t,v).toFixed(d??dec(t))}
+function fu(t,v,d){const u=unit(t);return f(t,v,d)+((t==='temp'||t==='pct'||!u)?u:' '+u)}
+const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+const cap=s=>s[0].toUpperCase()+s.slice(1);
+const trim=n=>String(+n.toFixed(1));
+
+/* ---------- series ---------- */
+function rng(seed){let s=7;for(const c of seed)s=(s*31+c.charCodeAt(0))>>>0;return()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296}}
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const PER={
+  day:{n:24,lab:i=>i%6===0?['12a','6a','12p','6p'][i/6]:'',full:i=>(i%12||12)+(i<12?' AM':' PM')},
+  week:{n:7,lab:i=>'MTWTFSS'[i],full:i=>['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i]},
+  month:{n:30,lab:i=>[0,4,9,14,19,24,29].includes(i)?String(i+1):'',full:i=>'Nov '+(i+1)},
+  year:{n:12,lab:i=>'JFMAMJJASOND'[i],full:i=>MON[i]}
+};
+const PW={day:'Today',week:'This week',month:'This month',year:'This year'};
+function series(m,p,prev=false){
+  const r=rng(m+p+S.station+(prev?'p':'')),n=PER[p].n,out=[],off=S.station==='backyard'?-3:0;
+  for(let i=0;i<n;i++){let v;
+    switch(m){
+      case'temp':case'dew':case'indoor':{let b;
+        if(p==='day')b=71+7*Math.cos((i-15)/24*2*Math.PI);
+        else if(p==='week')b=[69,72,74,78,75,73,71][i];
+        else if(p==='month')b=70+5*Math.sin(i/4.5);
+        else b=58+22*Math.cos((i-6.5)/12*2*Math.PI);
+        b+=off+(p==='week'?0:(r()-.5)*2);
+        if(prev)b-=2+r()*2;
+        if(m==='dew')b-=15+r()*2;
+        if(m==='indoor')b=72+(b-70)*.15+(r()-.5);
+        v=b;break}
+      case'humidity':v=Math.min(98,Math.max(20,56+(p==='day'?-12*Math.cos((i-15)/24*2*Math.PI):10*Math.sin(i*1.3))+(r()-.5)*8+(prev?4:0)));break;
+      case'wind':v=Math.max(.5,6+3.5*Math.sin(i*.9+(prev?1:0))+(r()-.3)*4);break;
+      case'rain':
+        if(p==='day')v=({5:.02,6:.05,7:.03,8:.02})[i]||0;
+        else if(p==='week')v=prev?[.2,0,0,.1,0,.4,0][i]:[0,.12,0,.35,.05,0,0][i];
+        else if(p==='month')v=r()<.3?+(r()*.6).toFixed(2):0;
+        else v=1.2+r()*3;
+        if(prev&&p!=='week')v*=.5+r();
+        if(S.station==='backyard'&&p==='day')v=0;
+        break;
+      case'pressure':v=(p==='day'&&!prev?29.97-.05*i/(n-1)+(r()-.5)*.01:29.92+.12*Math.sin(i/(n/3)+(prev?1:0))+(r()-.5)*.04)+(S.station==='backyard'?.03:0);break;
+      case'uv':v=p==='day'?(i>=6&&i<=19?Math.max(0,5*Math.sin((i-6)/13*Math.PI)):0):2+r()*5;break;
+    }
+    out.push(v)}
+  return out}
+function gusts(p,prev=false){const r=rng('g'+p+S.station+prev);return series('wind',p,prev).map(x=>x*1.4+r()*3)}
+function stats(m,p){const s=series(m,p),t=MET[m].type;
+  if(m==='rain'){const tot=s.reduce((a,b)=>a+b,0);return[{l:'Total',v:fu(t,tot)},{l:p==='day'?'Wettest hour':p==='year'?'Wettest month':'Wettest day',v:fu(t,Math.max(...s))},{l:p==='day'?'Rain hours':p==='year'?'Wet months':'Rain days',v:String(s.filter(x=>x>0).length)}]}
+  if(m==='wind'){const g=gusts(p);return[{l:'Max gust',v:fu(t,Math.max(...g))},{l:'Avg wind',v:fu(t,avg(s))},{l:'Max wind',v:fu(t,Math.max(...s))}]}
+  return[{l:'High',v:fu(t,Math.max(...s))},{l:'Low',v:fu(t,Math.min(...s))},{l:'Average',v:fu(t,avg(s))}]}
+function headline(m,p){const s=series(m,p),t=MET[m].type;
+  if(m==='rain')return`${fu(t,s.reduce((a,b)=>a+b,0))} total`;
+  if(m==='wind')return`Gusts up to ${fu(t,Math.max(...gusts(p)))}`;
+  if(m==='temp')return`Avg ${fu(t,avg(s))} · High ${fu(t,Math.max(...s))}`;
+  return`Avg ${fu(t,avg(s))}`}
+
+/* ---------- chart ---------- */
+let CH={};
+function smooth(pts){let d=`M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;for(let i=0;i<pts.length-1;i++){const p0=pts[i-1]||pts[i],p1=pts[i],p2=pts[i+1],p3=pts[i+2]||p2;const c1=[p1[0]+(p2[0]-p0[0])/6,p1[1]+(p2[1]-p0[1])/6],c2=[p2[0]-(p3[0]-p1[0])/6,p2[1]-(p3[1]-p1[1])/6];d+=` C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`}return d}
+function niceStep(x){const e=Math.pow(10,Math.floor(Math.log10(x))),q=x/e;return(q<=1?1:q<=2?2:q<=2.5?2.5:q<=5?5:10)*e}
+function chart(m,p,compare){
+  const id='c'+Object.keys(CH).length,t=MET[m].type,n=PER[p].n,bars=m==='rain';
+  const lines=[{d:series(m,p).map(v=>conv(t,v)),cls:'main',label:MET[m].short}];
+  if(m==='wind')lines.push({d:gusts(p).map(v=>conv(t,v)),cls:'gust',label:'Gust'});
+  if(compare)lines.push({d:series(m,p,true).map(v=>conv(t,v)),cls:'prev',label:'Previous '+p});
+  const W=320,H=170,pl=38,pr=8,pt=8,pb=20,all=lines.flatMap(l=>l.d);
+  let lo=Math.min(...all),hi=Math.max(...all);if(bars||m==='uv')lo=0;if(hi-lo<1e-6)hi=lo+1;
+  const step=niceStep((hi-lo)/3);lo=Math.floor(lo/step)*step;hi=Math.ceil(hi/step)*step;if(hi===lo)hi=lo+step;
+  const X=i=>pl+(W-pl-pr)*(bars?(i+.5)/n:i/(n-1)),Y=v=>pt+(H-pt-pb)*(1-(v-lo)/(hi-lo));
+  const sd=step<1?(step<.1?2:1):0;
+  let g='';for(let v=lo;v<=hi+step/2;v+=step){g+=`<line class="grid-l" x1="${pl}" x2="${W-pr}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${pl-6}" y="${Y(v)+3}" text-anchor="end">${v.toFixed(sd)}</text>`}
+  let xl='';for(let i=0;i<n;i++){const l=PER[p].lab(i);if(l)xl+=`<text x="${X(i)}" y="${H-4}" text-anchor="middle">${l}</text>`}
+  let body='';
+  lines.forEach((l,k)=>{
+    if(bars&&k===0){const bw=(W-pl-pr)/n*.62;l.d.forEach((v,i)=>{body+=`<rect class="bar" x="${X(i)-bw/2}" y="${Y(v)}" width="${bw}" height="${Math.max(0,Y(lo)-Y(v))}" rx="2"/>`})}
+    else{const pts=l.d.map((v,i)=>[X(i),Y(v)]);const path=smooth(pts);
+      if(k===0)body+=`<path class="a-main" d="${path} L${X(n-1)},${Y(lo)} L${X(0)},${Y(lo)}Z"/>`;
+      body+=`<path class="l-${l.cls}" d="${path}"/>`}
+  });
+  const dots=lines.map((l,k)=>`<circle class="dot" id="${id}d${k}" r="4.5" cx="-20" cy="-20" fill="${k===0?'var(--accent)':l.cls==='gust'?'#2a9d8f':'#d97706'}"/>`).join('');
+  CH[id]={n,X,Y,lines,p,t};
+  const legend=lines.length>1?`<div class="legend">${lines.map(l=>`<span><i class="${l.cls}"></i>${l.label}</span>`).join('')}</div>`:'';
+  return`<div class="chart" data-chart="${id}"><div class="tip" id="${id}t">Drag across the chart to see values</div>
+  <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${MET[m].name} chart, ${PW[p].toLowerCase()}">${g}${body}${xl}<line class="scrub" id="${id}s" x1="-10" x2="-10" y1="${pt}" y2="${H-pb}"/>${dots}</svg>${legend}</div>`}
+function scrub(e){
+  const svg=e.target.closest('.chart svg');if(!svg)return;const id=svg.parentNode.dataset.chart,c=CH[id];if(!c)return;
+  const r=svg.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*320;
+  let best=0,bd=1e9;for(let i=0;i<c.n;i++){const d=Math.abs(c.X(i)-x);if(d<bd){bd=d;best=i}}
+  const s=document.getElementById(id+'s');s.setAttribute('x1',c.X(best));s.setAttribute('x2',c.X(best));
+  c.lines.forEach((l,k)=>{const d=document.getElementById(id+'d'+k);d.setAttribute('cx',c.X(best));d.setAttribute('cy',c.Y(l.d[best]))});
+  const u=unit(c.t),fmt=v=>v.toFixed(dec(c.t))+((c.t==='temp'||c.t==='pct'||!u)?u:' '+u);
+  document.getElementById(id+'t').innerHTML=`<b>${PER[c.p].full(best)}</b> · `+c.lines.map(l=>`${l.label} <b>${fmt(l.d[best])}</b>`).join(' · ')}
+function spark(){const s=series('temp','day').map(v=>conv('temp',v)),lo=Math.min(...s),hi=Math.max(...s),W=300,H=46;
+  const pts=s.map((v,i)=>[4+i/(s.length-1)*(W-8),4+(H-8)*(1-(v-lo)/(hi-lo))]),d=smooth(pts),now=pts[15];
+  return`<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><path class="a" d="${d} L${W-4},${H} L4,${H}Z"/><path class="l" d="${d}"/><circle cx="${now[0]}" cy="${now[1]}" r="4"/></svg>`}
+function compass(deg){let tk='';for(let a=0;a<360;a+=30)tk+=`<line class="tk" x1="50" y1="9" x2="50" y2="${a%90?13:15}" transform="rotate(${a} 50 50)"/>`;
+  return`<svg class="compass" viewBox="0 0 100 100" aria-label="Wind from ${DIRFULL[dirName(deg)]}"><circle class="ring" cx="50" cy="50" r="42"/>${tk}
+  <text x="50" y="27">N</text><text x="76" y="54">E</text><text x="50" y="81">S</text><text x="24" y="54">W</text>
+  <g transform="rotate(${deg} 50 50)"><line x1="50" y1="50" x2="50" y2="26" stroke="var(--cta)" stroke-width="3" stroke-linecap="round"/><path class="needle" d="M50 10 L57 28 L50 25 L43 28Z"/></g><circle class="hub" cx="50" cy="50" r="3"/></svg>`}
+
+/* ---------- small builders ---------- */
+const chev=`<span class="chevr">${I.chevR}</span>`;
+function chip(k,t){return`<span class="st ${k}">${{ok:I.check,warn:I.warn,bad:I.x,na:I.minus}[k]}${t}</span>`}
+function sw(on,act,extra=''){return`<button class="switch ${on?'on':''}" role="switch" aria-checked="${on}" data-act="${act}" ${extra}><i></i></button>`}
+function topHdr(title,o={}){const s=st();
+  return`<div class="demo">${I.info.replace('class="ic"','class="ic" style="width:13px;height:13px"')}Demo · simulated data</div>
+  <div class="hdr"><span class="logo">VEVOR</span>${o.station?`<button class="stn" data-act="stations" aria-label="Switch station"><span>${s.name}</span>${I.chevD}</button>`:'<span class="spacer"></span>'}
+  <button class="icon-btn" data-act="push" data-v="settings" aria-label="Units and display">${I.gear}</button></div>
+  ${title?`<h1>${title}</h1>`:''}${o.sub?`<p class="sub">${o.sub}</p>`:''}`}
+function subTop(back,title,sub){return`<div class="demo">${I.info.replace('class="ic"','class="ic" style="width:13px;height:13px"')}Demo · simulated data</div>
+  <div class="nav"><button class="back" data-act="back">${I.chevL}${back}</button></div><h1>${title}</h1>${sub?`<p class="sub">${sub}</p>`:''}`}
+const ROOTNAME={home:'Home',history:'History',alerts:'Alerts',devices:'Devices'};
+function backLabel(){const sk=S.stacks[S.tab];if(sk.length<2)return ROOTNAME[S.tab];return{settings:'Settings',health:'Device health',diag:'Diagnostics',metric:'Back',alertForm:'Alerts'}[sk[sk.length-2].v]||'Back'}
+function uvLevel(u){return u<3?'Low':u<6?'Moderate':u<8?'High':u<11?'Very high':'Extreme'}
+function pressText(s){const tr=s.pressTrend,a=tr<-.01?'↓':tr>.01?'↑':'→',w=tr<-.01?'Falling':tr>.01?'Rising':'Steady';
+  const d=S.units.press==='hPa'?(tr*33.8639).toFixed(1)+' hPa':tr.toFixed(2)+' inHg';return{a,w,d:(tr>0?'+':'')+d.replace('-','−')}}
+function issues(s){const out=[];if(!s.online)return out;if(s.issues.includes('rain'))out.push('Rain gauge needs check');if(s.issues.includes('battery')&&s.battery<25)out.push(`Outdoor sensor battery ${s.battery}%`);return out}
+
+/* ---------- views ---------- */
+function tile(o){return`<button class="tile ${o.wide?'wide':''}" data-act="metric" data-m="${o.m}" aria-label="${MET[o.m].name} details">
+  <div class="tl">${MET[o.m].icon}<span>${o.label}</span>${o.info?`<span class="info" role="button" tabindex="0" data-act="info" data-info="${o.info}" aria-label="About ${o.label}">${I.info}</span>`:''}<span class="chev">${I.chevR}</span></div>
+  ${o.val!==undefined?`<div class="tv">${o.val}<small>${o.u}</small></div>`:''}${o.sub?`<div class="ts">${o.sub}</div>`:''}${o.extra||''}</button>`}
+function vHome(){const s=st(),off=!s.online,iss=issues(s),pt=pressText(s);
+  let banner='';
+  if(off)banner=`<button class="banner bad" data-act="goDevices" data-v="diag">${I.wifi}<div><b>Station offline</b><span>No data for ${s.updated}. Check gateway power and Wi-Fi.</span></div>${I.chevR}</button>`;
+  else if(iss.length)banner=`<button class="banner" data-act="goDevices" data-v="health">${I.warn}<div><b>${iss.length} item${iss.length>1?'s':''} need attention</b><span>${iss.join(' · ')}</span></div>${I.chevR}</button>`;
+  return`${topHdr('',{station:true})}${banner}
+  <section class="hero ${off?'stale':''}">
+    <div class="cond">${s.cond==='Clear'?clearIcon:pcloud}<span>${s.cond}</span></div>
+    <div class="big">${f('temp',s.temp,1)}<span class="deg">${unit('temp')}</span></div>
+    <div class="hl">Feels like ${fu('temp',s.feels)} · H ${fu('temp',s.hi)} · L ${fu('temp',s.lo)}</div>
+    <div class="upd ${off?'warn':''}">${off?I.warn+'Offline · last synced '+s.updated:'<span class="live"></span>Live · updated '+s.updated}</div>
+  </section>
+  <div class="grid ${off?'stale':''}">
+    ${tile({m:'temp',label:'Temperature · last 24 h',wide:true,sub:`High <b class="trend">${fu('temp',s.hi)}</b>&nbsp; Low <b class="trend">${fu('temp',s.lo)}</b>`,extra:spark()})}
+    <button class="tile wide" data-act="metric" data-m="wind" aria-label="Wind details"><div class="tl">${I.wind}<span>Wind</span><span class="chev">${I.chevR}</span></div>
+      <div class="windrow">${compass(s.dir)}<div class="wv"><span>Speed</span><b>${f('wind',s.wind)}<small>${unit('wind')}</small></b><span>Gust</span><b>${f('wind',s.gust)}<small>${unit('wind')}</small></b><span>From</span><b>${dirName(s.dir)}<small>${s.dir}°</small></b></div></div></button>
+    ${tile({m:'humidity',label:'Humidity',val:s.hum,u:'%',sub:'Comfortable'})}
+    ${tile({m:'rain',label:'Rain today',val:f('rain',s.rainDay),u:unit('rain'),sub:`Rate ${f('rain',s.rainRate)} ${unit('rain')}/h`})}
+    ${tile({m:'pressure',label:'Pressure',val:f('press',s.press),u:unit('press'),sub:`<b class="trend">${pt.a} ${pt.w}</b>&nbsp;in 3 h`})}
+    ${tile({m:'dew',label:'Dew point',info:'dew',val:f('temp',s.dew),u:unit('temp'),sub:'Calculated'})}
+    ${tile({m:'indoor',label:'Indoor',val:f('temp',s.indoor),u:unit('temp'),sub:`Humidity ${s.indoorHum}%`})}
+    ${tile({m:'uv',label:'UV index',val:s.uv,u:'',sub:uvLevel(s.uv)})}
+  </div>
+  <div class="group">
+    <div class="row">${I.sunrise}<span class="rl"><b>Sunrise / Sunset</b></span><span class="rv">${s.sunrise} / ${s.sunset}</span></div>
+    <div class="row">${moonIcon(s.moonFrac)}<span class="rl"><b>Moon phase</b></span><span class="rv">${s.moon}</span></div>
+  </div>`}
+function vHistory(){const m=S.hMetric,p=S.hPeriod;
+  return`${topHdr('History',{sub:st().name})}
+  <div class="seg" role="tablist" aria-label="Period">${['day','week','month','year'].map(x=>`<button role="tab" aria-selected="${x===p}" class="${x===p?'on':''}" data-act="hPeriod" data-v="${x}">${cap(x)}</button>`).join('')}</div>
+  <div class="chips" role="tablist" aria-label="Metric">${['temp','humidity','wind','rain','pressure'].map(x=>`<button role="tab" aria-selected="${x===m}" class="chip ${x===m?'on':''}" data-act="hMetric" data-v="${x}">${MET[x].icon}${MET[x].short}</button>`).join('')}</div>
+  <div class="card"><div class="eyebrow">${PW[p]} · ${MET[m].name}</div><div class="headline">${headline(m,p)}</div>${chart(m,p,S.compare)}</div>
+  <div class="stats">${stats(m,p).map(x=>`<div class="stat"><span>${x.l}</span><b>${x.v.replace(/ (\S+)$/,'<small>$1</small>')}</b></div>`).join('')}</div>
+  <div class="group"><div class="row"><span class="rl"><b>Compare with previous ${p}</b><small>Adds a dashed line for the previous period</small></span>${sw(S.compare,'compare','aria-label="Compare with previous period"')}</div></div>`}
+function alertText(a){const d=AM[a.m],u=unit(d.type)+(d.suffix||'');return`${d.name} ${a.cond} ${f(d.type,a.v,['temp','pct','wind'].includes(d.type)?0:dec(d.type))}${d.type==='temp'||d.type==='pct'?'':' '}${u}${a.dur!=='0'?' for '+DUR[a.dur]:''}`}
+function vAlerts(){
+  const list=S.alerts.length?`<div class="group">${S.alerts.map((a,i)=>`<div class="row">${I.bell}<span class="rl"><b>${alertText(a)}</b><small>${a.on?'On':'Paused'} · ${st().name}</small></span>${sw(a.on,'toggleAlert',`data-i="${i}" aria-label="Turn alert on or off"`)}<button class="del" data-act="delAlert" data-i="${i}" aria-label="Delete alert">${I.trash}</button></div>`).join('')}</div>`
+    :`<div class="card empty">${I.bell}<b>No alerts yet</b><span>Start from a template below, or create your own rule.</span></div>`;
+  return`${topHdr('Alerts',{sub:'Get notified when your station crosses a threshold.'})}${list}
+  <div class="sec">Quick templates</div>
+  <div class="tpl">${TPL.map((t,i)=>`<button class="tplc" data-act="tpl" data-i="${i}">${t.icon}<b>${t.name}</b><span>${alertText({...t}).replace(AM[t.m].name,cap(AM[t.m].name.toLowerCase()))}</span></button>`).join('')}</div>
+  <button class="cta" data-act="newAlert">${I.plus}Create custom alert</button>
+  <p class="note">${I.info}<span>Demo alerts are kept only while this page is open. No notifications are sent.</span></p>`}
+function vDevices(){
+  return`${topHdr('Devices',{sub:'Your stations and sensors'})}
+  <div class="group">${Object.values(STATIONS).map(s=>`<button class="row" data-act="openStation" data-v="${s.id}">${I.station}<span class="rl"><b>${s.name}</b><small>${s.online?'Updated '+s.updated:'Last synced '+s.updated}</small></span>${s.online?(issues(s).length?chip('warn','Attention'):chip('ok','Online')):chip('bad','Offline')}${chev}</button>`).join('')}</div>
+  <button class="cta" data-act="toast" data-v="Pairing flow is not part of this demo.">${I.plus}Add station</button>
+  <div class="sec">Support</div>
+  <div class="group">
+    <button class="row" data-act="push" data-v="health">${I.check}<span class="rl"><b>Device health</b><small>Battery, sensors and connection</small></span>${chev}</button>
+    <button class="row" data-act="push" data-v="diag">${I.wifi}<span class="rl"><b>Connection diagnostics</b><small>Step-by-step troubleshooting</small></span>${chev}</button>
+    <button class="row" data-act="push" data-v="settings">${I.ruler}<span class="rl"><b>Units & display</b><small>°F/°C, wind, pressure, rain, dark mode</small></span>${chev}</button>
+    <button class="row" data-act="toast" data-v="Model-specific manual will be linked here.">${I.book}<span class="rl"><b>User manual & help</b><small>Setup, mounting and FAQ</small></span>${chev}</button>
+  </div>`}
+const PAGES={
+  metric(pg){const m=pg.m,s=st(),t=MET[m].type,p=S.dPeriod;let head='';
+    if(m==='wind')head=`<div class="card"><div class="windrow">${compass(s.dir)}<div class="wv"><span>Speed</span><b>${f('wind',s.wind)}<small>${unit('wind')}</small></b><span>Gust</span><b>${f('wind',s.gust)}<small>${unit('wind')}</small></b><span>From</span><b>${dirName(s.dir)}<small>${s.dir}°</small></b></div></div><p class="ts" style="margin-top:8px">${DIRFULL[dirName(s.dir)]}</p></div>`;
+    else{const now={temp:s.temp,humidity:s.hum,rain:s.rainDay,pressure:s.press,dew:s.dew,indoor:s.indoor,uv:s.uv}[m];
+      const note={temp:`Feels like ${fu('temp',s.feels)}`,humidity:`Dew point ${fu('temp',s.dew)}`,rain:`Today · rate ${f('rain',s.rainRate)} ${unit('rain')}/h`,pressure:(()=>{const x=pressText(s);return`${x.a} ${x.w} · ${x.d} in 3 h`})(),dew:'Calculated from temperature and humidity',indoor:`Indoor humidity ${s.indoorHum}%`,uv:uvLevel(s.uv)}[m];
+      head=`<div class="dval"><b>${f(t,now,m==='temp'||m==='indoor'?1:undefined)}</b><span>${unit(t)}</span></div><p class="dsub">${note}</p>`}
+    const am=METRIC_TO_ALERT[m];
+    return`${subTop(backLabel(),MET[m].name,s.name+(s.online?'':' · offline, showing last synced data'))}${head}
+    <div class="card"><div class="seg" role="tablist">${['day','week','month','year'].map(x=>`<button class="${x===p?'on':''}" data-act="dPeriod" data-v="${x}">${cap(x)}</button>`).join('')}</div>
+    <div class="headline" style="margin-top:12px">${headline(m,p)}</div>${chart(m,p,false)}</div>
+    <div class="stats">${stats(m,p).map(x=>`<div class="stat"><span>${x.l}</span><b>${x.v.replace(/ (\S+)$/,'<small>$1</small>')}</b></div>`).join('')}</div>
+    ${am?`<button class="cta ghost" data-act="alertFor" data-v="${am}">${I.bell}Create alert for ${MET[m].short.toLowerCase()}</button>`:''}`},
+  health(){const s=st(),off=!s.online,low=s.battery<25,rain=s.issues.includes('rain');
+    const sensor=(n,ok)=>`<div class="row"><span class="rl"><b>${n}</b></span>${off?chip('na','No data'):ok}</div>`;
+    return`${subTop(backLabel(),'Device health',s.name)}
+    <div class="group">
+      <div class="row">${I.wifi}<span class="rl"><b>Gateway</b><small>Last update ${s.updated}</small></span>${off?chip('bad','Offline'):chip('ok','Online')}</div>
+      <div class="row">${I.battery}<span class="rl"><b>Outdoor sensor power</b><small>Battery ${s.battery}%${low?' · replace within ~2 weeks':''}</small></span>${low?chip('warn','Low battery'):chip('ok','Good')}</div>
+    </div>
+    <div class="sec">Sensors</div>
+    <div class="group">
+      ${sensor('Temperature & humidity',chip('ok','Normal'))}
+      ${sensor('Wind',chip('ok','Normal'))}
+      ${off?sensor('Rain gauge',''):rain?`<button class="row" data-act="push" data-v="diag"><span class="rl"><b>Rain gauge</b><small>No tips recorded while humidity stayed above 95%</small></span>${chip('warn','Needs check')}${chev}</button>`:sensor('Rain gauge',chip('ok','Normal'))}
+      <div class="row"><span class="rl"><b>Light / UV</b><small>Not included with this model</small></span>${chip('na','Not installed')}</div>
+    </div>
+    <p class="note">${I.info}<span>Status icons and text always appear together, so states are readable without color.</span></p>
+    <button class="cta" data-act="push" data-v="diag">Run diagnostics</button>`},
+  diag(){const s=st();
+    if(!s.online)return`${subTop(backLabel(),'Diagnostics',s.name+' · offline')}
+      <div class="group steps">${[['Check gateway power','Make sure the display/gateway is plugged in and its screen is on.'],['Check Wi-Fi','Gateway must be on 2.4 GHz Wi-Fi within range of your router.'],['Restart the gateway','Unplug for 10 seconds, then plug back in.'],['Still offline?','Re-pair the station from Devices → Add station.']].map((x,i)=>`<div class="row"><span class="num">${i+1}</span><span class="rl"><b>${x[0]}</b><small>${x[1]}</small></span></div>`).join('')}</div>
+      <button class="cta" data-act="retry">Retry connection</button>`;
+    const rain=s.issues.includes('rain');
+    return`${subTop(backLabel(),'Diagnostics',s.name)}
+    <div class="card"><div class="eyebrow">Rain gauge</div><div class="headline">${rain?'Possible blockage':'No issues found'}</div><p class="ts">${rain?'The gauge recorded no rain while humidity stayed above 95% for 3 h. This can be normal (fog, dew) — check the gauge to be sure.':'All sensors reported normally in the last 24 h.'}</p></div>
+    ${rain?`<div class="group steps">${[['Clear the funnel','Remove leaves, dirt or insects from the funnel and screen.'],['Check the tipping bucket','It should rock freely left and right.'],['Test with water','Pour a small cup of water slowly; Rain today should increase.']].map((x,i)=>`<div class="row"><span class="num">${i+1}</span><span class="rl"><b>${x[0]}</b><small>${x[1]}</small></span></div>`).join('')}</div>
+    <button class="cta" data-act="fixRain">Mark rain gauge as checked</button>`:''}`},
+  settings(){const seg=(k,opts)=>`<div class="seg" style="min-width:150px">${opts.map(([v,l])=>`<button class="${S.units[k]===v?'on':''}" data-act="unit" data-k="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
+    return`${subTop(backLabel(),'Units & display')}
+    <div class="card form">
+      <div class="row" style="padding:0"><span class="rl"><b>Temperature</b></span>${seg('temp',[['F','°F'],['C','°C']])}</div>
+      <div class="row" style="padding:0;border:0"><span class="rl"><b>Wind</b></span>${seg('wind',[['mph','mph'],['kmh','km/h']])}</div>
+      <div class="row" style="padding:0;border:0"><span class="rl"><b>Pressure</b></span>${seg('press',[['inHg','inHg'],['hPa','hPa']])}</div>
+      <div class="row" style="padding:0;border:0"><span class="rl"><b>Rain</b></span>${seg('rain',[['in','in'],['mm','mm']])}</div>
+    </div>
+    <div class="sec">Appearance</div>
+    <div class="card form"><div class="seg">${[['auto','Auto'],['light','Light'],['dark','Dark']].map(([v,l])=>`<button class="${S.theme===v?'on':''}" data-act="theme" data-v="${v}">${l}</button>`).join('')}</div>
+    <p class="ts">Auto switches to dark between sunset and sunrise.</p></div>`},
+  alertForm(){const d=S.draft,a=AM[d.m],u=unit(a.type)+(a.suffix||''),err=validate();
+    const lo=trim(conv(a.type,a.min)),hi=trim(conv(a.type,a.max));
+    return`${subTop(backLabel(),d.edit?'Edit alert':'New alert',st().name)}
+    <div class="card form">
+      <label class="fl">Metric<select data-in="m">${Object.entries(AM).map(([k,v])=>`<option value="${k}" ${k===d.m?'selected':''}>${v.name}</option>`).join('')}</select></label>
+      <label class="fl">Condition<select data-in="cond"><option value="above" ${d.cond==='above'?'selected':''}>Goes above</option><option value="below" ${d.cond==='below'?'selected':''}>Drops below</option></select></label>
+      <label class="fl">Threshold<div class="inp ${err?'bad':''}" id="inpBox"><input id="thr" inputmode="decimal" data-in="v" value="${d.v}" aria-describedby="thrMsg"><span>${u}</span></div>
+        <span id="thrMsg" class="${err?'err':'hint'}">${err||`Allowed range ${lo} to ${hi}${a.type==='temp'||a.type==='pct'?'':' '}${u}`}</span></label>
+      <label class="fl">Lasting at least<select data-in="dur">${Object.entries(DUR).map(([k,v])=>`<option value="${k}" ${k===d.dur?'selected':''}>${v}</option>`).join('')}</select></label>
+    </div>
+    <div class="card preview"><div class="eyebrow">Preview</div><p id="pv">${previewText()}</p></div>
+    <button class="cta" id="saveBtn" data-act="saveAlert" ${err?'disabled':''}>Save alert</button>`}
+};
+function validate(){const d=S.draft,a=AM[d.m],s=String(d.v).trim();
+  if(s==='')return'Enter a threshold.';const n=Number(s);if(!isFinite(n))return'Use numbers only.';
+  const lo=conv(a.type,a.min),hi=conv(a.type,a.max),u=unit(a.type)+(a.suffix||'');
+  if(n<lo-1e-9||n>hi+1e-9)return`Enter a value between ${trim(lo)} and ${trim(hi)}${a.type==='temp'||a.type==='pct'?'':' '}${u}.`;return''}
+function previewText(){const d=S.draft,a=AM[d.m],u=unit(a.type)+(a.suffix||'');const v=String(d.v).trim()||'…';
+  return`Notify me when <b>${a.name.toLowerCase()}</b> ${d.cond==='above'?'goes above':'drops below'} <b>${v}${a.type==='temp'||a.type==='pct'?'':' '}${u}</b>${d.dur!=='0'?' for at least '+DUR[d.dur]:''} at ${st().name}.`}
+
+/* ---------- router / render ---------- */
+const content=document.getElementById('content');
+const cur=()=>{const sk=S.stacks[S.tab];return sk[sk.length-1]};
+const skey=()=>S.tab+':'+S.stacks[S.tab].length;
+function isDark(){if(S.theme==='dark')return true;if(S.theme==='light')return false;const h=new Date().getHours();return h<7||h>=18}
+function render(){CH={};const pg=cur();
+  content.innerHTML=pg?PAGES[pg.v](pg):{home:vHome,history:vHistory,alerts:vAlerts,devices:vDevices}[S.tab]();
+  const app=document.getElementById('app');app.classList.toggle('dark',isDark());app.classList.toggle('offline-sky',!st().online);
+  document.getElementById('tabbar').innerHTML=[['home','Home',I.home],['history','History',I.chart],['alerts','Alerts',I.bell],['devices','Devices',I.station]]
+    .map(([k,l,i])=>`<button class="${S.tab===k?'on':''}" data-act="tab" data-v="${k}" aria-current="${S.tab===k?'page':'false'}">${i}${l}</button>`).join('');}
+function push(pg){S.scroll[skey()]=content.scrollTop;S.stacks[S.tab].push(pg);render();content.scrollTop=0}
+function back(){if(!S.stacks[S.tab].length)return;S.stacks[S.tab].pop();render();content.scrollTop=S.scroll[skey()]||0}
+function tab(t){if(t===S.tab){if(S.stacks[t].length){S.stacks[t]=[];render();content.scrollTop=S.scroll[skey()]||0}else content.scrollTo({top:0,behavior:'smooth'});return}
+  S.scroll[skey()]=content.scrollTop;S.tab=t;render();content.scrollTop=S.scroll[skey()]||0}
+function rerender(){const y=content.scrollTop;render();content.scrollTop=y}
+let tt;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2200)}
+function openSheet(){const sh=document.getElementById('sheet');
+  sh.innerHTML=`<div class="grab"></div><h3>Choose station</h3><div class="group" style="margin-top:6px;box-shadow:none">${Object.values(STATIONS).map(s=>`<button class="row" data-act="pickStation" data-v="${s.id}">${I.station}<span class="rl"><b>${s.name}</b><small>${s.online?'Updated '+s.updated:'Offline · last synced '+s.updated}</small></span>${s.id===S.station?`<span style="color:var(--accent);display:flex">${I.check}</span>`:''}</button>`).join('')}</div>`;
+  document.getElementById('scrim').style.display='block';requestAnimationFrame(()=>sh.classList.add('open'))}
+function closeSheet(){document.getElementById('sheet').classList.remove('open');document.getElementById('scrim').style.display='none'}
+function newDraft(o){const a=AM[o.m];S.draft={m:o.m,cond:o.cond||'above',v:trim(conv(a.type,o.v??(a.type==='temp'?95:a.min))),dur:o.dur||'5'}}
+
+document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el)return;const a=el.dataset.act,v=el.dataset.v;
+  switch(a){
+    case'tab':tab(v);break;
+    case'back':back();break;
+    case'push':push({v});break;
+    case'metric':push({v:'metric',m:el.dataset.m});break;
+    case'info':toast({dew:'Dew point is calculated from temperature and humidity.'}[el.dataset.info]);break;
+    case'goDevices':S.scroll[skey()]=content.scrollTop;S.tab='devices';S.stacks.devices=v==='diag'?[{v:'health'},{v:'diag'}]:[{v}];render();content.scrollTop=0;break;
+    case'hPeriod':S.hPeriod=v;rerender();break;
+    case'hMetric':S.hMetric=v;rerender();break;
+    case'dPeriod':S.dPeriod=v;rerender();break;
+    case'compare':S.compare=!S.compare;rerender();break;
+    case'stations':openSheet();break;
+    case'closeSheet':closeSheet();break;
+    case'pickStation':S.station=v;closeSheet();rerender();toast('Showing '+st().name);break;
+    case'openStation':S.station=v;push({v:'health'});break;
+    case'toast':toast(v);break;
+    case'unit':S.units[el.dataset.k]=v;rerender();break;
+    case'theme':S.theme=v;rerender();break;
+    case'tpl':{const t=TPL[+el.dataset.i];newDraft(t);push({v:'alertForm'});break}
+    case'newAlert':newDraft({m:'temp',cond:'above',v:95,dur:'5'});push({v:'alertForm'});break;
+    case'alertFor':S.tab='alerts';S.stacks.alerts=[];newDraft({m:v});S.stacks.alerts.push({v:'alertForm'});render();content.scrollTop=0;break;
+    case'saveAlert':{if(validate())return;const d=S.draft,t=AM[d.m].type;S.alerts.push({m:d.m,cond:d.cond,v:inv(t,Number(d.v)),dur:d.dur,on:true});S.stacks.alerts=[];render();content.scrollTop=0;toast('Alert saved');break}
+    case'toggleAlert':{const x=S.alerts[+el.dataset.i];x.on=!x.on;rerender();break}
+    case'delAlert':S.alerts.splice(+el.dataset.i,1);rerender();toast('Alert deleted');break;
+    case'fixRain':st().issues=st().issues.filter(x=>x!=='rain');back();toast('Rain gauge marked as checked');break;
+    case'retry':toast('Still no response from gateway (demo).');break;
+  }});
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[role=button][data-act]')){e.preventDefault();e.target.click()}});
+document.addEventListener('change',e=>{const k=e.target.dataset.in;if(!k||k==='v')return;
+  if(k==='m'){const old=S.draft;newDraft({m:e.target.value,cond:old.cond,dur:old.dur,v:AM[e.target.value].type==='temp'?95:undefined})}else S.draft[k]=e.target.value;rerender()});
+document.addEventListener('input',e=>{if(e.target.dataset.in!=='v')return;S.draft.v=e.target.value;const err=validate(),a=AM[S.draft.m],u=unit(a.type)+(a.suffix||'');
+  document.getElementById('inpBox').classList.toggle('bad',!!err);const msg=document.getElementById('thrMsg');msg.className=err?'err':'hint';
+  msg.textContent=err||`Allowed range ${trim(conv(a.type,a.min))} to ${trim(conv(a.type,a.max))}${a.type==='temp'||a.type==='pct'?'':' '}${u}`;
+  document.getElementById('pv').innerHTML=previewText();document.getElementById('saveBtn').disabled=!!err});
+let scrubbing=false;
+content.addEventListener('pointerdown',e=>{if(e.target.closest('.chart svg')){scrubbing=true;scrub(e)}});
+content.addEventListener('pointermove',e=>{if(scrubbing||e.pointerType==='mouse')scrub(e)});
+window.addEventListener('pointerup',()=>scrubbing=false);
+/* edge-swipe back (iOS style) */
+let sx=null,sy=0;
+content.addEventListener('touchstart',e=>{const r=content.getBoundingClientRect(),t=e.touches[0];sx=(t.clientX-r.left<28&&S.stacks[S.tab].length)?t.clientX:null;sy=t.clientY},{passive:true});
+content.addEventListener('touchend',e=>{if(sx===null)return;const t=e.changedTouches[0];if(t.clientX-sx>70&&Math.abs(t.clientY-sy)<60)back();sx=null});
+function clock(){const d=new Date();document.getElementById('clock').textContent=(d.getHours()%12||12)+':'+String(d.getMinutes()).padStart(2,'0')}
+clock();setInterval(clock,30000);
+function fit(){const ph=document.getElementById('phone');if(innerWidth<=500||innerHeight<=700){ph.style.transform='';return}const k=Math.min(1,(innerHeight-24)/868,(innerWidth-24)/414);ph.style.transform=k<1?`scale(${k})`:''}
+fit();addEventListener('resize',fit);
+render();
+</script>
+</body>
+</html>

@@ -372,7 +372,7 @@ const DIRFULL={N:'North',NNE:'North-northeast',NE:'Northeast',ENE:'East-northeas
 const dirName=d=>DIR16[Math.round(d/22.5)%16];
 
 /* ---------- state ---------- */
-const S={tab:'home',stacks:{home:[],history:[],alerts:[],share:[],devices:[]},scroll:{},station:'lakeside',
+const S={tab:'home',stacks:{home:[],history:[],alerts:[],devices:[]},scroll:{},station:'lakeside',
   units:{temp:'F',wind:'mph',press:'inHg',rain:'in'},theme:'auto',
   hPeriod:'week',hMetric:'temp',compare:false,dPeriod:'day',alerts:[],draft:null,wu:{}};
 const st=()=>STATIONS[S.station];
@@ -493,7 +493,7 @@ function topHdr(title,o={}){const s=st();
   ${title?`<h1>${title}</h1>`:''}${o.sub?`<p class="sub">${o.sub}</p>`:''}`}
 function subTop(back,title,sub){return`<div class="demo">${I.info.replace('class="ic"','class="ic" style="width:13px;height:13px"')}Demo · simulated data</div>
   <div class="nav"><button class="back" data-act="back">${I.chevL}${back}</button></div><h1>${title}</h1>${sub?`<p class="sub">${sub}</p>`:''}`}
-const ROOTNAME={home:'Home',history:'History',alerts:'Alerts',share:'Share',devices:'Devices'};
+const ROOTNAME={home:'Home',history:'History',alerts:'Alerts',devices:'Devices'};
 function backLabel(){const sk=S.stacks[S.tab];if(sk.length<2)return ROOTNAME[S.tab];return{settings:'Settings',health:'Device health',diag:'Diagnostics',metric:'Back',alertForm:'Alerts'}[sk[sk.length-2].v]||'Back'}
 function uvLevel(u){return u<3?'Low':u<6?'Moderate':u<8?'High':u<11?'Very high':'Extreme'}
 function pressText(s){const tr=s.pressTrend,a=tr<-.01?'↓':tr>.01?'↑':'→',w=tr<-.01?'Falling':tr>.01?'Rising':'Steady';
@@ -530,7 +530,7 @@ function vHome(){const s=st(),off=!s.online,iss=issues(s),pt=pressText(s);
     <div class="row">${I.sunrise}<span class="rl"><b>Sunrise / Sunset</b></span><span class="rv">${s.sunrise} / ${s.sunset}</span></div>
     <div class="row">${moonIcon(s.moonFrac)}<span class="rl"><b>Moon phase</b></span><span class="rv">${s.moon}</span></div>
   </div>
-  <div class="group"><button class="row" data-act="tab" data-v="share">${I.share}<span class="rl"><b>Share your weather</b><small>${S.wu[S.station]==='sharing'?'Weather Underground · sharing demo':S.wu[S.station]==='paused'?'Weather Underground · demo paused':'Connect Weather Underground · optional'}</small></span>${chev}</button></div>`}
+  <div class="group"><button class="row" data-act="goDevices" data-v="wu">${I.share}<span class="rl"><b>Share your weather</b><small>${S.wu[S.station]==='sharing'?'Weather Underground · sharing demo':S.wu[S.station]==='paused'?'Weather Underground · demo paused':'Connect Weather Underground · optional'}</small></span>${chev}</button></div>`}
 function vHistory(){const m=S.hMetric,p=S.hPeriod;
   return`${topHdr('History',{sub:st().name})}
   <div class="seg" role="tablist" aria-label="Period">${['day','week','month','year'].map(x=>`<button role="tab" aria-selected="${x===p}" class="${x===p?'on':''}" data-act="hPeriod" data-v="${x}">${cap(x)}</button>`).join('')}</div>
@@ -561,8 +561,8 @@ function vDevices(){
     <button class="row" data-act="toast" data-v="Model-specific manual will be linked here.">${I.book}<span class="rl"><b>User manual & help</b><small>Setup, mounting and FAQ</small></span>${chev}</button>
   </div>`}
 const PAGES={
-  wu(pg={}){const state=S.wu[S.station]||'off',sharing=state==='sharing',paused=state==='paused';
-    return`${pg.root?topHdr('Share',{station:true,sub:'Optional connected services'}):subTop(backLabel(),'Weather Underground',st().name+' · Optional connected service')}
+  wu(){const state=S.wu[S.station]||'off',sharing=state==='sharing',paused=state==='paused';
+    return`${subTop(backLabel(),'Weather Underground',st().name+' · Optional connected service')}
     <div class="card"><div class="eyebrow">WEATHER UNDERGROUND</div><div class="headline" style="margin-top:6px">Your station, a wider community</div><p class="ts" style="margin-top:8px">Choose whether to share your outdoor observations with Weather Underground. VEVOR Weather works independently without this connection.</p></div>
     <div class="sec">Connection status</div><div class="group"><div class="row">${I.wifi}<span class="rl"><b>${sharing?'Sharing (demo)':paused?'Sharing paused (demo)':'Not connected'}</b><small>${sharing?'Simulated status · no real upload':paused?'Demo sharing is stopped':'Sharing is off by default'}</small></span>${chip(sharing?'ok':'na',sharing?'Demo on':paused?'Paused':'Off')}</div></div>
     <div class="sec">How it works</div><div class="group steps">${[['Create a WU station','Sign in to Weather Underground and add a personal weather station.'],['Find your station details','Get your Station ID and Station Key from your WU account.'],['Choose to share','In a finished app, enter those details and explicitly enable sharing.']].map((x,i)=>`<div class="row"><span class="num">${i+1}</span><span class="rl"><b>${x[0]}</b><small>${x[1]}</small></span></div>`).join('')}</div>
@@ -643,9 +643,9 @@ const cur=()=>{const sk=S.stacks[S.tab];return sk[sk.length-1]};
 const skey=()=>S.tab+':'+S.stacks[S.tab].length;
 function isDark(){if(S.theme==='dark')return true;if(S.theme==='light')return false;const h=new Date().getHours();return h<7||h>=18}
 function render(){CH={};const pg=cur();
-  content.innerHTML=pg?PAGES[pg.v](pg):{home:vHome,history:vHistory,alerts:vAlerts,share:()=>PAGES.wu({root:true}),devices:vDevices}[S.tab]();
+  content.innerHTML=pg?PAGES[pg.v](pg):{home:vHome,history:vHistory,alerts:vAlerts,devices:vDevices}[S.tab]();
   const app=document.getElementById('app');app.classList.toggle('dark',isDark());app.classList.toggle('offline-sky',!st().online);
-  document.getElementById('tabbar').innerHTML=[['home','Home',I.home],['history','History',I.chart],['alerts','Alerts',I.bell],['share','Share',I.share],['devices','Devices',I.station]]
+  document.getElementById('tabbar').innerHTML=[['home','Home',I.home],['history','History',I.chart],['alerts','Alerts',I.bell],['devices','Devices',I.station]]
     .map(([k,l,i])=>`<button class="${S.tab===k?'on':''}" data-act="tab" data-v="${k}" aria-current="${S.tab===k?'page':'false'}">${i}${l}</button>`).join('');}
 function push(pg){S.scroll[skey()]=content.scrollTop;S.stacks[S.tab].push(pg);render();content.scrollTop=0}
 function back(){if(!S.stacks[S.tab].length)return;S.stacks[S.tab].pop();render();content.scrollTop=S.scroll[skey()]||0}

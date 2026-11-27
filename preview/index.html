@@ -373,7 +373,7 @@ const dirName=d=>DIR16[Math.round(d/22.5)%16];
 /* ---------- state ---------- */
 const S={tab:'home',stacks:{home:[],history:[],alerts:[],devices:[]},scroll:{},station:'lakeside',
   units:{temp:'F',wind:'mph',press:'inHg',rain:'in'},theme:'auto',
-  hPeriod:'week',hMetric:'temp',compare:false,dPeriod:'day',alerts:[],draft:null};
+  hPeriod:'week',hMetric:'temp',compare:false,dPeriod:'day',alerts:[],draft:null,wu:{}};
 const st=()=>STATIONS[S.station];
 
 /* ---------- units ---------- */
@@ -549,6 +549,8 @@ function vDevices(){
   return`${topHdr('Devices',{sub:'Your stations and sensors'})}
   <div class="group">${Object.values(STATIONS).map(s=>`<button class="row" data-act="openStation" data-v="${s.id}">${I.station}<span class="rl"><b>${s.name}</b><small>${s.online?'Updated '+s.updated:'Last synced '+s.updated}</small></span>${s.online?(issues(s).length?chip('warn','Attention'):chip('ok','Online')):chip('bad','Offline')}${chev}</button>`).join('')}</div>
   <button class="cta" data-act="toast" data-v="Pairing flow is not part of this demo.">${I.plus}Add station</button>
+  <div class="sec">Connected services</div>
+  <div class="group"><button class="row" data-act="push" data-v="wu">${I.sun}<span class="rl"><b>Weather Underground</b><small>Optional weather sharing · ${st().name}</small></span>${chip(S.wu[S.station]==='sharing'?'ok':'na',S.wu[S.station]==='sharing'?'Demo on':S.wu[S.station]==='paused'?'Paused':'Optional')}${chev}</button></div>
   <div class="sec">Support</div>
   <div class="group">
     <button class="row" data-act="push" data-v="health">${I.check}<span class="rl"><b>Device health</b><small>Battery, sensors and connection</small></span>${chev}</button>
@@ -557,6 +559,15 @@ function vDevices(){
     <button class="row" data-act="toast" data-v="Model-specific manual will be linked here.">${I.book}<span class="rl"><b>User manual & help</b><small>Setup, mounting and FAQ</small></span>${chev}</button>
   </div>`}
 const PAGES={
+  wu(){const state=S.wu[S.station]||'off',sharing=state==='sharing',paused=state==='paused';
+    return`${subTop(backLabel(),'Weather Underground',st().name+' · Optional connected service')}
+    <div class="card"><div class="eyebrow">SHARE YOUR WEATHER</div><div class="headline" style="margin-top:6px">Your station, a wider community</div><p class="ts" style="margin-top:8px">Choose whether to share your outdoor observations with Weather Underground. VEVOR Weather works independently without this connection.</p></div>
+    <div class="sec">Connection status</div><div class="group"><div class="row">${I.wifi}<span class="rl"><b>${sharing?'Sharing (demo)':paused?'Sharing paused (demo)':'Not connected'}</b><small>${sharing?'Simulated status · no real upload':paused?'Demo sharing is stopped':'Sharing is off by default'}</small></span>${chip(sharing?'ok':'na',sharing?'Demo on':paused?'Paused':'Off')}</div></div>
+    <div class="sec">How it works</div><div class="group steps">${[['Create a WU station','Sign in to Weather Underground and add a personal weather station.'],['Find your station details','Get your Station ID and Station Key from your WU account.'],['Choose to share','In a finished app, enter those details and explicitly enable sharing.']].map((x,i)=>`<div class="row"><span class="num">${i+1}</span><span class="rl"><b>${x[0]}</b><small>${x[1]}</small></span></div>`).join('')}</div>
+    <div class="sec">Example configuration</div><div class="card form"><div><span class="fl">Station ID · example only</span><div class="inp" style="margin-top:6px"><span>DEMO-STATION</span></div></div><div><span class="fl">Station Key · example only</span><div class="inp" style="margin-top:6px"><span>••••••••••</span></div></div><p class="ts">These are placeholders, not editable credentials. Do not enter a real Station Key in this demo.</p></div>
+    <div class="sec">What would be shared</div><div class="card"><p class="ts">Supported outdoor readings, such as temperature, humidity, wind, rain and pressure, may be shared. Availability depends on the station model.</p><p class="ts" style="margin-top:8px">A station's location and shared data may be publicly visible on WU. Indoor readings are not included in this example.</p></div>
+    ${state==='off'?`<button class="cta" data-act="wuConnect">Try sharing · demo only</button>`:`<button class="cta" data-act="wuToggle">${sharing?'Pause demo sharing':'Resume demo sharing'}</button><button class="cta ghost" data-act="wuDisconnect">Disconnect demo</button>`}
+    <p class="note">${I.info}<span>This is an interactive mockup: no WU account is connected and no data is transmitted. Pausing or disconnecting in the finished app would stop future sharing, not erase data already on WU.</span></p>`},
   metric(pg){const m=pg.m,s=st(),t=MET[m].type,p=S.dPeriod;let head='';
     if(m==='wind')head=`<div class="card"><div class="windrow">${compass(s.dir)}<div class="wv"><span>Speed</span><b>${f('wind',s.wind)}<small>${unit('wind')}</small></b><span>Gust</span><b>${f('wind',s.gust)}<small>${unit('wind')}</small></b><span>From</span><b>${dirName(s.dir)}<small>${s.dir}°</small></b></div></div><p class="ts" style="margin-top:8px">${DIRFULL[dirName(s.dir)]}</p></div>`;
     else{const now={temp:s.temp,humidity:s.hum,rain:s.rainDay,pressure:s.press,dew:s.dew,indoor:s.indoor,uv:s.uv}[m];
@@ -662,6 +673,9 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if
     case'closeSheet':closeSheet();break;
     case'pickStation':S.station=v;closeSheet();rerender();toast('Showing '+st().name);break;
     case'openStation':S.station=v;push({v:'health'});break;
+    case'wuConnect':S.wu[S.station]='sharing';rerender();toast('Demo only · no data sent');break;
+    case'wuToggle':S.wu[S.station]=S.wu[S.station]==='sharing'?'paused':'sharing';rerender();toast(S.wu[S.station]==='sharing'?'Demo sharing resumed':'Demo sharing paused');break;
+    case'wuDisconnect':S.wu[S.station]='off';rerender();toast('Demo connection removed');break;
     case'toast':toast(v);break;
     case'unit':S.units[el.dataset.k]=v;rerender();break;
     case'theme':S.theme=v;rerender();break;
